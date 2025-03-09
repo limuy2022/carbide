@@ -8,9 +8,9 @@ use libc::{c_char, c_float, c_int, c_uchar, c_uint, c_void, size_t};
 
 use crate::cli::{CommandLine, CommandLineProgram, EnvVar};
 use crate::gfx::{Cast, Color, Point, Rect, Size};
+use crate::input;
 use crate::output::{RenderThread, Window};
 use crate::ui::navigation::NavigationAction;
-use crate::{input, utils::log};
 
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -188,9 +188,9 @@ pub unsafe extern "C" fn carbonyl_renderer_resize(bridge: RendererPtr) {
     let bridge = unsafe { bridge.as_ref() };
     let mut bridge = bridge.unwrap().lock().unwrap();
     let window = bridge.window.update();
-    let cells = window.cells.clone();
+    let cells = window.cells;
 
-    log::debug!("resizing renderer, terminal window: {:?}", window);
+    tracing::debug!("resizing renderer, terminal window: {:?}", window);
 
     bridge
         .renderer
@@ -298,7 +298,7 @@ pub unsafe extern "C" fn carbonyl_renderer_get_size(bridge: RendererPtr) -> CSiz
     let bridge = unsafe { bridge.as_ref() };
     let bridge = bridge.unwrap().lock().unwrap();
 
-    log::debug!("terminal size: {:?}", bridge.window.browser);
+    tracing::debug!("terminal size: {:?}", bridge.window.browser);
 
     bridge.window.browser.into()
 }
@@ -414,7 +414,7 @@ pub unsafe extern "C" fn carbonyl_renderer_listen(
                             }
                         }
                         Terminal(terminal) => match terminal {
-                            TerminalEvent::Name(name) => log::debug!("terminal name: {name}"),
+                            TerminalEvent::Name(name) => tracing::debug!("terminal name: {name}"),
                             TerminalEvent::TrueColorSupported => renderer.enable_true_color(),
                         },
                     }

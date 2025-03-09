@@ -1,7 +1,7 @@
 use core::mem::MaybeUninit;
 use std::str::FromStr;
 
-use crate::{cli::CommandLine, gfx::Size, utils::log};
+use crate::{cli::CommandLine, gfx::Size};
 
 /// A terminal window.
 #[derive(Clone, Debug)]
@@ -65,7 +65,7 @@ impl Window {
                 x => x,
             };
 
-            log::warning!(
+            tracing::warn!(
                 "TIOCGWINSZ returned an empty size ({}x{}), defaulting to {}x{}",
                 term.width,
                 term.height,

@@ -5,8 +5,6 @@ use std::mem::MaybeUninit;
 use std::os::fd::RawFd;
 use std::os::unix::prelude::AsRawFd;
 
-use crate::utils::log;
-
 pub struct Terminal {
     settings: Option<TerminalSettings>,
     alt_screen: bool,
@@ -26,13 +24,13 @@ impl Terminal {
             settings: match TerminalSettings::open_raw() {
                 Ok(settings) => Some(settings),
                 Err(error) => {
-                    log::error!("Failed to setup terminal: {error}");
+                    tracing::error!("Failed to setup terminal: {error}");
 
                     None
                 }
             },
             alt_screen: if let Err(error) = TTY::enter_alt_screen() {
-                log::error!("Failed to enter alternative screen: {error}");
+                tracing::error!("Failed to enter alternative screen: {error}");
 
                 false
             } else {
@@ -44,7 +42,7 @@ impl Terminal {
     pub fn teardown(&mut self) {
         if let Some(ref settings) = self.settings {
             if let Err(error) = settings.apply() {
-                log::error!("Failed to revert terminal settings: {error}");
+                tracing::error!("Failed to revert terminal settings: {error}");
             }
 
             self.settings = None;
@@ -52,7 +50,7 @@ impl Terminal {
 
         if self.alt_screen {
             if let Err(error) = TTY::quit_alt_screen() {
-                log::error!("Failed to quit alternative screen: {error}");
+                tracing::error!("Failed to quit alternative screen: {error}");
             }
 
             self.alt_screen = false;

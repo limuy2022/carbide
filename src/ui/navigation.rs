@@ -5,7 +5,6 @@ use unicode_width::UnicodeWidthStr;
 use crate::{
     gfx::{Color, Point, Size},
     input::Key,
-    utils::log,
 };
 
 pub enum NavigationAction {
@@ -132,7 +131,7 @@ impl Navigation {
             11.. => {
                 self.cursor = Some(self.url_size().min(origin.x as usize - 11));
 
-                log::debug!("setting cursor to {:?}", self.cursor);
+                tracing::debug!("setting cursor to {:?}", self.cursor);
 
                 NavigationAction::Ignore
             }

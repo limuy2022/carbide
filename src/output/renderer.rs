@@ -10,7 +10,6 @@ use crate::{
     gfx::{Color, Point, Rect, Size},
     input::Key,
     ui::navigation::{Navigation, NavigationAction},
-    utils::log,
 };
 
 use super::{Cell, Grapheme, Painter};
@@ -128,7 +127,7 @@ impl Renderer {
         let viewport = self.size.cast::<usize>();
 
         if pixels.len() < viewport.width * viewport.height * 8 * 4 {
-            log::debug!(
+            tracing::debug!(
                 "unexpected size, actual: {}, expected: {}",
                 pixels.len(),
                 viewport.width * viewport.height * 8 * 4

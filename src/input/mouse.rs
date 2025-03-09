@@ -1,6 +1,6 @@
 use std::ops::BitAnd;
 
-use crate::{control_flow, utils::log};
+use crate::control_flow;
 
 use super::{Event, ParseControlFlow};
 
@@ -38,7 +38,7 @@ impl Mouse {
             (_, None, _) => self.col = num,
             (_, _, None) => self.row = num,
             _ => {
-                log::warning!("Malformed mouse sequence");
+                tracing::warn!("Malformed mouse sequence");
 
                 return None;
             }
