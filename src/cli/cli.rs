@@ -54,7 +54,7 @@ impl CommandLine {
                 ($var:ident, $enum:ident) => {{
                     $var = true;
 
-                    env::set_var(EnvVar::$enum, "1");
+                    unsafe { env::set_var(EnvVar::$enum, "1") };
                 }};
             }
 

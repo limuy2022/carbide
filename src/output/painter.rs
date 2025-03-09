@@ -2,7 +2,7 @@ use std::io::{self, Stdout, Write};
 
 use crate::gfx::{Color, Point};
 
-use super::{binarize_quandrant, Cell};
+use super::{Cell, binarize_quandrant};
 
 pub struct Painter {
     output: Stdout,
