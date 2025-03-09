@@ -155,7 +155,7 @@ macro_rules! impl_vector_overload {
             }
         }
 
-        crate::impl_vector_traits!($struct Vector2);
+        $crate::impl_vector_traits!($struct Vector2);
     );
     ($struct:ident $x:ident $y:ident $z:ident) => (
         impl<T: Copy> $struct<T> {
@@ -237,7 +237,7 @@ macro_rules! impl_vector_overload {
             }
         }
 
-        crate::impl_vector_traits!($struct Vector3);
+        $crate::impl_vector_traits!($struct Vector3);
     );
 }
 
@@ -291,26 +291,26 @@ macro_rules! impl_vector_traits {
             }
         }
 
-        crate::impl_vector_traits!($struct $vector i8);
-        crate::impl_vector_traits!($struct $vector u8);
-        crate::impl_vector_traits!($struct $vector i16);
-        crate::impl_vector_traits!($struct $vector u16);
-        crate::impl_vector_traits!($struct $vector i32);
-        crate::impl_vector_traits!($struct $vector u32);
-        crate::impl_vector_traits!($struct $vector i64);
-        crate::impl_vector_traits!($struct $vector u64);
-        crate::impl_vector_traits!($struct $vector isize);
-        crate::impl_vector_traits!($struct $vector usize);
-        crate::impl_vector_traits!($struct $vector f32 float);
-        crate::impl_vector_traits!($struct $vector f64 float);
+        $crate::impl_vector_traits!($struct $vector i8);
+        $crate::impl_vector_traits!($struct $vector u8);
+        $crate::impl_vector_traits!($struct $vector i16);
+        $crate::impl_vector_traits!($struct $vector u16);
+        $crate::impl_vector_traits!($struct $vector i32);
+        $crate::impl_vector_traits!($struct $vector u32);
+        $crate::impl_vector_traits!($struct $vector i64);
+        $crate::impl_vector_traits!($struct $vector u64);
+        $crate::impl_vector_traits!($struct $vector isize);
+        $crate::impl_vector_traits!($struct $vector usize);
+        $crate::impl_vector_traits!($struct $vector f32 float);
+        $crate::impl_vector_traits!($struct $vector f64 float);
 
-        crate::impl_vector_traits!($struct $vector Add add);
-        crate::impl_vector_traits!($struct $vector Sub sub);
-        crate::impl_vector_traits!($struct $vector Mul mul);
-        crate::impl_vector_traits!($struct $vector Div div);
-        crate::impl_vector_traits!($struct $vector BitOr bitor);
-        crate::impl_vector_traits!($struct $vector BitXor bitxor);
-        crate::impl_vector_traits!($struct $vector BitAnd bitand);
+        $crate::impl_vector_traits!($struct $vector Add add);
+        $crate::impl_vector_traits!($struct $vector Sub sub);
+        $crate::impl_vector_traits!($struct $vector Mul mul);
+        $crate::impl_vector_traits!($struct $vector Div div);
+        $crate::impl_vector_traits!($struct $vector BitOr bitor);
+        $crate::impl_vector_traits!($struct $vector BitXor bitxor);
+        $crate::impl_vector_traits!($struct $vector BitAnd bitand);
     };
     ($struct:ident $vector:ident $type:ident) => (
         impl $struct<$type> {

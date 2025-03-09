@@ -170,7 +170,7 @@ pub extern "C" fn carbonyl_renderer_create() -> RendererPtr {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn carbonyl_renderer_start(bridge: RendererPtr) {
+pub unsafe extern "C" fn carbonyl_renderer_start(bridge: RendererPtr) {
     {
         let bridge = unsafe { bridge.as_ref() };
         let mut bridge = bridge.unwrap().lock().unwrap();
@@ -178,11 +178,13 @@ pub extern "C" fn carbonyl_renderer_start(bridge: RendererPtr) {
         bridge.renderer.enable()
     }
 
-    carbonyl_renderer_resize(bridge);
+    unsafe {
+        carbonyl_renderer_resize(bridge);
+    }
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn carbonyl_renderer_resize(bridge: RendererPtr) {
+pub unsafe extern "C" fn carbonyl_renderer_resize(bridge: RendererPtr) {
     let bridge = unsafe { bridge.as_ref() };
     let mut bridge = bridge.unwrap().lock().unwrap();
     let window = bridge.window.update();
@@ -196,7 +198,7 @@ pub extern "C" fn carbonyl_renderer_resize(bridge: RendererPtr) {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn carbonyl_renderer_push_nav(
+pub unsafe extern "C" fn carbonyl_renderer_push_nav(
     bridge: RendererPtr,
     url: *const c_char,
     can_go_back: bool,
@@ -211,7 +213,7 @@ pub extern "C" fn carbonyl_renderer_push_nav(
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn carbonyl_renderer_set_title(bridge: RendererPtr, title: *const c_char) {
+pub unsafe extern "C" fn carbonyl_renderer_set_title(bridge: RendererPtr, title: *const c_char) {
     let (bridge, title) = unsafe { (bridge.as_ref(), CStr::from_ptr(title)) };
     let (mut bridge, title) = (bridge.unwrap().lock().unwrap(), title.to_owned());
 
@@ -221,7 +223,7 @@ pub extern "C" fn carbonyl_renderer_set_title(bridge: RendererPtr, title: *const
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn carbonyl_renderer_draw_text(
+pub unsafe extern "C" fn carbonyl_renderer_draw_text(
     bridge: RendererPtr,
     text: *const CText,
     text_size: size_t,
@@ -264,7 +266,7 @@ unsafe impl Send for CallbackData {}
 unsafe impl Sync for CallbackData {}
 
 #[unsafe(no_mangle)]
-pub extern "C" fn carbonyl_renderer_draw_bitmap(
+pub unsafe extern "C" fn carbonyl_renderer_draw_bitmap(
     bridge: RendererPtr,
     pixels: *const c_uchar,
     pixels_size: CSize,
@@ -292,7 +294,7 @@ pub extern "C" fn carbonyl_renderer_draw_bitmap(
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn carbonyl_renderer_get_size(bridge: RendererPtr) -> CSize {
+pub unsafe extern "C" fn carbonyl_renderer_get_size(bridge: RendererPtr) -> CSize {
     let bridge = unsafe { bridge.as_ref() };
     let bridge = bridge.unwrap().lock().unwrap();
 
@@ -321,7 +323,10 @@ where
 /// This will block so the calling code should start and own a dedicated thread.
 /// It will panic if there is any error.
 #[unsafe(no_mangle)]
-pub extern "C" fn carbonyl_renderer_listen(bridge: RendererPtr, delegate: *mut BrowserDelegate) {
+pub unsafe extern "C" fn carbonyl_renderer_listen(
+    bridge: RendererPtr,
+    delegate: *mut BrowserDelegate,
+) {
     let bridge = unsafe { &*bridge };
     let delegate = unsafe { *delegate };
 
@@ -369,7 +374,7 @@ pub extern "C" fn carbonyl_renderer_listen(bridge: RendererPtr, delegate: *mut B
                         }
                     };
 
-                    return false;
+                    false
                 };
 
                 for event in std::mem::take(&mut events) {

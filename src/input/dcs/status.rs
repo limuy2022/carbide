@@ -22,11 +22,10 @@ pub struct StatusParser {
 
 impl StatusParser {
     pub fn new(code: u8) -> Self {
-        let mut parser = Self::default();
-
-        parser.code = code;
-
-        parser
+        Self {
+            code,
+            ..Default::default()
+        }
     }
 
     pub fn parse(&mut self, key: u8) -> ParseControlFlow {

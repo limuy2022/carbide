@@ -48,7 +48,7 @@ impl CommandLine {
         for arg in &args {
             let split: Vec<&str> = arg.split("=").collect();
             let default = arg.as_str();
-            let (key, value) = (split.get(0).unwrap_or(&default), split.get(1));
+            let (key, value) = (split.first().unwrap_or(&default), split.get(1));
 
             macro_rules! set {
                 ($var:ident, $enum:ident) => {{
@@ -61,7 +61,7 @@ impl CommandLine {
             macro_rules! set_f32 {
                 ($var:ident = $expr:expr) => {{
                     if let Some(value) = value {
-                        if let Some(value) = value.parse::<f32>().ok() {
+                        if let Ok(value) = value.parse::<f32>() {
                             $var = {
                                 let $var = value;
 

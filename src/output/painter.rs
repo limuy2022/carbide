@@ -25,10 +25,10 @@ impl Painter {
             foreground: None,
             background_code: None,
             foreground_code: None,
-            true_color: match std::env::var("COLORTERM").unwrap_or_default().as_str() {
-                "truecolor" | "24bit" => true,
-                _ => false,
-            },
+            true_color: matches!(
+                std::env::var("COLORTERM").unwrap_or_default().as_str(),
+                "truecolor" | "24bit"
+            ),
         }
     }
 
@@ -54,7 +54,7 @@ impl Painter {
             )?;
         }
 
-        self.output.write(self.buffer.as_slice())?;
+        self.output.write_all(self.buffer.as_slice())?;
         self.output.flush()?;
         self.buffer.clear();
         self.cursor = None;

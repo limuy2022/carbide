@@ -25,12 +25,19 @@ enum State {
     Modifier(u8),
 }
 
-impl Keyboard {
-    pub fn new() -> Self {
+impl Default for Keyboard {
+    fn default() -> Self {
         Self {
             state: State::Separator,
         }
     }
+}
+
+impl Keyboard {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     pub fn key(key: u8, modifiers: u8) -> Option<Event> {
         let modifiers = KeyModifiers::parse(modifiers);
         let char = match key {
