@@ -25,23 +25,17 @@ const LOG_OUTPUT_DIR: &str = "carbonyl";
 /// # Warning
 /// This function should be called only once.
 /// The second one will be ignored
-pub fn logger_init<Sink>(test_mode: bool, output: Sink, output_file: impl AsRef<Path>)
+pub fn logger_init<Sink>(output: Sink, output_file: impl AsRef<Path>)
 where
     Sink: for<'a> MakeWriter<'a> + Send + Sync + 'static,
 {
     static INIT: OnceLock<Option<WorkerGuard>> = OnceLock::new();
     INIT.get_or_init(|| {
-        let env = if test_mode {
-            || EnvFilter::try_from_env(LOG_ENV_VAR).unwrap_or("trace".into())
-        } else {
-            || EnvFilter::try_from_env(LOG_ENV_VAR).unwrap_or("info".into())
-        };
+        let env = 
+            || EnvFilter::try_from_env(LOG_ENV_VAR).unwrap_or("info".into());
         let formatting_layer = fmt::layer().pretty().with_writer(output);
-        let file_appender = if test_mode {
-            tracing_appender::rolling::never(LOG_OUTPUT_DIR, "test")
-        } else {
-            tracing_appender::rolling::daily(LOG_OUTPUT_DIR, output_file)
-        };
+        let file_appender = 
+            tracing_appender::rolling::daily(LOG_OUTPUT_DIR, output_file);
         let (non_blocking, file_guard) = tracing_appender::non_blocking(file_appender);
         Registry::default()
             .with(env())
