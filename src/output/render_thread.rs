@@ -4,6 +4,8 @@ use std::{
     time::Instant,
 };
 
+use clap::Parser;
+
 use crate::cli::CommandLine;
 
 use super::{FrameSync, Renderer};

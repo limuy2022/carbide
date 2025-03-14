@@ -1,6 +1,8 @@
 use core::mem::MaybeUninit;
 use std::str::FromStr;
 
+use clap::Parser;
+
 use crate::{cli::CommandLine, gfx::Size};
 
 /// A terminal window.
