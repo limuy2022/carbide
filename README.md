@@ -10,12 +10,12 @@ O —— Cr —— O
     /  \
    O    O</pre>
       </td>
-      <td><h1>Carbonyl</h1></td>
+      <td><h1>carbide</h1></td>
     </tr>
   </tbody>
 </table>
 
-Carbonyl is a Chromium based browser built to run in a terminal. [Read the blog post](https://fathy.fr/carbonyl).
+Carbide is a Chromium based browser built to run in a terminal. [Read the blog post](https://fathy.fr/carbonyl).
 
 It supports pretty much all Web APIs including WebGL, WebGPU, audio and video playback, animations, etc..
 

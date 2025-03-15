@@ -25,15 +25,15 @@ conventional_commits = true
 filter_unconventional = true
 split_commits = false
 commit_preprocessors = [
-    { pattern = "#([0-9]+)", replace = "[#${1}](https://github.com/fathyb/carbonyl/issues/${1})" }
+    { pattern = "#([0-9]+)", replace = "[#${1}](https://github.com/limuy2022/carbide/issues/${1})" },
 ]
 commit_parsers = [
     { message = "^feat", group = "<!-- 0 -->🚀 Features" },
     { message = "^fix", group = "<!-- 1 -->🐛 Bug Fixes" },
     { message = "^doc", group = "<!-- 2 -->📖 Documentation" },
-    { message = "^perf", group = "<!-- 3 -->⚡ Performance"},
+    { message = "^perf", group = "<!-- 3 -->⚡ Performance" },
     { message = "^chore", skip = true },
-    { body = ".*security", group = "<!-- 8 -->🔐 Security"},
+    { body = ".*security", group = "<!-- 8 -->🔐 Security" },
 ]
 protect_breaking_commits = false
 filter_commits = false
