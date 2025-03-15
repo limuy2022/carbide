@@ -1,6 +1,8 @@
 use crate::cef_bridge::BrowserState;
 use cef::rc::{Rc, RcImpl};
-use cef::{ImplBrowser, ImplRenderHandler, PaintElementType, Rect, WrapRenderHandler};
+use cef::{
+    ImplBrowser, ImplRenderHandler, PaintElementType, Rect, RenderHandler, WrapRenderHandler,
+};
 use std::ffi::c_int;
 use std::ptr;
 use std::sync::{Arc, Mutex};
@@ -12,11 +14,11 @@ pub struct TerminalRenderHandler {
 }
 
 impl TerminalRenderHandler {
-    pub fn new(state: Arc<Mutex<BrowserState>>) -> Self {
-        Self {
+    pub fn new(state: Arc<Mutex<BrowserState>>) -> RenderHandler {
+        RenderHandler::new(Self {
             state,
             object: ptr::null_mut(),
-        }
+        })
     }
 }
 

@@ -1,4 +1,7 @@
-use cef::rc::{Rc, RcImpl};
+use cef::{
+    App,
+    rc::{Rc, RcImpl},
+};
 
 #[derive(Debug)]
 pub struct TerminalApp {
@@ -6,10 +9,10 @@ pub struct TerminalApp {
 }
 
 impl TerminalApp {
-    pub fn new() -> Self {
-        Self {
+    pub fn new() -> App {
+        App::new(Self {
             object: std::ptr::null_mut(),
-        }
+        })
     }
 }
 

@@ -39,9 +39,9 @@ impl Default for BrowserState {
 #[derive(Clone)]
 pub struct CarbideClient {
     state: Arc<Mutex<BrowserState>>,
-    render_handler: Arc<TerminalRenderHandler>,
-    window_info: cef::WindowInfo,
-    client: cef::Client,
+    // render_handler: Arc<TerminalRenderHandler>,
+    // window_info: cef::WindowInfo,
+    // client: cef::Client,
     browser_host: cef::Browser,
 }
 
@@ -67,10 +67,10 @@ impl CarbideClient {
             windowless_rendering_enabled: true.into(),
             ..Default::default()
         };
-        let render_handler = Arc::new(TerminalRenderHandler::new(state.clone()));
+        let render_handler = TerminalRenderHandler::new(state.clone());
         trace!("created render handler");
 
-        let mut client = cef::Client::new(TerminalClient::new(render_handler.clone()));
+        let mut client = TerminalClient::new(render_handler.clone());
         trace!("created client");
 
         let browser_settings = BrowserSettings {
@@ -93,9 +93,9 @@ impl CarbideClient {
         trace!("created browser");
         Ok(Self {
             state,
-            render_handler,
-            window_info,
-            client,
+            // render_handler,
+            // window_info,
+            // client,
             browser_host: browser,
         })
     }
@@ -180,7 +180,7 @@ pub fn init_cef() -> Result<()> {
     let code = cef::initialize(
         Some(args.as_main_args()),
         Some(&opts),
-        Option::<&mut App>::None,
+        Some(&mut app),
         sandbox.as_mut_ptr(),
     );
     if code == 0 {

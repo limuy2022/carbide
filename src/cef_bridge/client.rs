@@ -1,21 +1,20 @@
-use cef::ImplClient;
-use std::sync::Arc;
-use cef::rc::{Rc, RcImpl};
-use std::ptr;
 use crate::cef_bridge::TerminalRenderHandler;
+use cef::rc::{Rc, RcImpl};
+use cef::{Client, ImplClient, RenderHandler};
+use std::ptr;
+use std::sync::Arc;
 
-#[derive(Debug)]
 pub struct TerminalClient {
     object: *mut RcImpl<cef_dll_sys::cef_client_t, Self>,
-    render_handler: Arc<TerminalRenderHandler>,
+    render_handler: RenderHandler,
 }
 
 impl TerminalClient {
-    pub fn new(render_handler: Arc<TerminalRenderHandler>) -> Self {
-        Self {
+    pub fn new(render_handler: RenderHandler) -> Client {
+        Client::new(Self {
             object: ptr::null_mut(),
             render_handler,
-        }
+        })
     }
 }
 
@@ -54,8 +53,6 @@ impl ImplClient for TerminalClient {
     }
 
     fn get_render_handler(&self) -> Option<cef::RenderHandler> {
-        Some(cef::RenderHandler::new(Arc::unwrap_or_clone(
-            self.render_handler.clone(),
-        )))
+        Some(self.render_handler.clone())
     }
 }

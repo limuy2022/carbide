@@ -32,16 +32,15 @@ pub fn run() -> anyhow::Result<()> {
     let cef_status = std::sync::Arc::new(Mutex::new(false));
     let cef_status_clone = cef_status.clone();
     cef_bridge::init_cef()?;
-
+    // create the browser
+    let browser = Arc::new(match cef_bridge::CarbideClient::new() {
+        Ok(browser) => browser,
+        Err(e) => {
+            barrier_clone.wait();
+            return Err(e);
+        }
+    });
     let handle = std::thread::spawn(move || {
-        // create the browser
-        let browser = Arc::new(match cef_bridge::CarbideClient::new() {
-            Ok(browser) => browser,
-            Err(e) => {
-                barrier_clone.wait();
-                return Err(e);
-            }
-        });
         info!("Browser created");
         *cef_status_clone.lock() = true;
         barrier_clone.wait();
