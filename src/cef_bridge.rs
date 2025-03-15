@@ -77,21 +77,26 @@ impl CarbideClient {
             windowless_frame_rate: 60,
             ..Default::default()
         };
-        let browser = browser_host_create_browser_sync(
+        let browser = match browser_host_create_browser_sync(
             Some(&window_info),
             Some(&mut client),
             Some(&CefStringUtf16::from("about:blank")),
             Some(&browser_settings),
             Option::<&mut DictionaryValue>::None,
             Option::<&mut RequestContext>::None,
-        );
+        ) {
+            Some(browser) => browser,
+            None => {
+                bail!("Failed to create browser");
+            }
+        };
         trace!("created browser");
         Ok(Self {
             state,
             render_handler,
             window_info,
             client,
-            browser_host: browser.unwrap(),
+            browser_host: browser,
         })
     }
 

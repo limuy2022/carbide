@@ -89,6 +89,7 @@ pub fn draw(
     terminal: &mut ratatui::Terminal<CrosstermBackend<Stdout>>,
     browser: Arc<CarbideClient>,
 ) -> anyhow::Result<()> {
+    info!("Drawing UI");
     let mut browser_ui = BrowserUI::new(browser)?;
     let mut should_quit = false;
 

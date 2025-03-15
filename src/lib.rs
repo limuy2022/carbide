@@ -45,6 +45,7 @@ pub fn run() -> anyhow::Result<()> {
         info!("Browser created");
         *cef_status_clone.lock() = true;
         barrier_clone.wait();
+        info!("Starting UI");
         let mut terminal = ratatui::init();
         sleep(time::Duration::from_millis(500));
         ui::draw(&mut terminal, browser)?;
