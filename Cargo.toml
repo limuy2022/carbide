@@ -12,11 +12,12 @@ tracing = "0"
 tracing-appender = "0"
 tracing-subscriber = { version = "0", features = ["tracing-log", "env-filter"] }
 anyhow = "1"
-clap = {version = "4", features = ["derive"]}
-cef = "133"
+clap = { version = "4", features = ["derive"] }
+cef = "134"
+cef-dll-sys = "134"
 ratatui = "0.29.0"
 crossterm = "0.28.1"
-shadow-rs = {version = "1", default-features = false}
+shadow-rs = { version = "1", default-features = false }
 
 [build-dependencies]
 anyhow = "1"

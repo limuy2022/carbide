@@ -1,3 +1,4 @@
+pub mod cef_bridge;
 pub mod cli;
 pub mod gfx;
 pub mod input;
