@@ -18,6 +18,7 @@ cef-dll-sys = "134"
 ratatui = "0.29.0"
 crossterm = "0.28.1"
 shadow-rs = { version = "1", default-features = false }
+parking_lot = "0"
 
 [build-dependencies]
 anyhow = "1"

@@ -1,4 +1,5 @@
-use std::io::Stdout;
+use std::{io::Stdout, sync::Arc};
+use tracing::{debug, error, info, instrument, trace};
 
 use crossterm::event::{self, Event, KeyCode, KeyEventKind};
 use ratatui::{
@@ -11,19 +12,20 @@ use crate::cef_bridge::{self, BrowserState, CarbideClient};
 pub mod navigation;
 
 pub struct BrowserUI {
-    client: CarbideClient,
+    client: Arc<CarbideClient>,
     address: String,
 }
 
 impl BrowserUI {
-    pub fn new() -> Self {
-        Self {
-            client: CarbideClient::new(),
+    pub fn new(client: Arc<CarbideClient>) -> anyhow::Result<Self> {
+        Ok(Self {
+            client,
             address: String::new(),
-        }
+        })
     }
 
     pub fn navigate(&self, url: &str) -> anyhow::Result<()> {
+        tracing::info!("Navigating to URL: {}", url);
         self.client.navigate(url)
     }
 
@@ -43,43 +45,39 @@ impl BrowserUI {
             let gray = (r as f32 * 0.2126 + g as f32 * 0.7152 + b as f32 * 0.0722) / 12.75;
             return 232 + gray.round() as u8;
         }
-        
-        16 + 
-        ((r as u16 * 5 / 255) as u8 * 36) + 
-        ((g as u16 * 5 / 255) as u8 * 6) + 
-        (b as u16 * 5 / 255) as u8
+
+        16 + ((r as u16 * 5 / 255) as u8 * 36)
+            + ((g as u16 * 5 / 255) as u8 * 6)
+            + (b as u16 * 5 / 255) as u8
     }
 
     fn convert_frame_to_ansi(buffer: &[u8], width: usize, height: usize) -> String {
         let mut output = String::with_capacity(width * height * 20);
         let mut i = 0;
-        
+
         // 使用每2x2像素块渲染为一个字符
         for y in (0..height).step_by(2) {
             for x in (0..width).step_by(2) {
                 // 获取四个像素点
                 let pixels = [
                     Self::get_pixel(buffer, width, x, y),
-                    Self::get_pixel(buffer, width, x+1, y),
-                    Self::get_pixel(buffer, width, x, y+1),
-                    Self::get_pixel(buffer, width, x+1, y+1),
+                    Self::get_pixel(buffer, width, x + 1, y),
+                    Self::get_pixel(buffer, width, x, y + 1),
+                    Self::get_pixel(buffer, width, x + 1, y + 1),
                 ];
-                
+
                 // 计算平均颜色
                 let (r, g, b) = (
                     pixels.iter().map(|p| p.0 as u32).sum::<u32>() / 4,
                     pixels.iter().map(|p| p.1 as u32).sum::<u32>() / 4,
                     pixels.iter().map(|p| p.2 as u32).sum::<u32>() / 4,
                 );
-                
+
                 // 转换为ANSI 256色
                 let color = Self::rgb_to_ansi256(r as u8, g as u8, b as u8);
-                
+
                 // 使用Unicode上半块字符
-                output.push_str(&format!(
-                    "\x1b[48;5;{}m▀",
-                    color
-                ));
+                output.push_str(&format!("\x1b[48;5;{}m▀", color));
             }
             output.push_str("\x1b[0m\n");
         }
@@ -87,12 +85,12 @@ impl BrowserUI {
     }
 }
 
-pub fn draw(terminal: &mut ratatui::Terminal<CrosstermBackend<Stdout>>) -> anyhow::Result<()> {
-    let mut browser_ui = BrowserUI::new();
+pub fn draw(
+    terminal: &mut ratatui::Terminal<CrosstermBackend<Stdout>>,
+    browser: Arc<CarbideClient>,
+) -> anyhow::Result<()> {
+    let mut browser_ui = BrowserUI::new(browser)?;
     let mut should_quit = false;
-
-    // Initialize CEF
-    cef_bridge::initialize_cef()?;
 
     while !should_quit {
         terminal.autoresize()?;
@@ -145,9 +143,9 @@ pub fn draw(terminal: &mut ratatui::Terminal<CrosstermBackend<Stdout>>) -> anyho
                 }
                 _ => String::from("Loading..."),
             };
-            
-            let content = Paragraph::new(content_text)
-                .block(Block::default().borders(Borders::ALL));
+
+            let content =
+                Paragraph::new(content_text).block(Block::default().borders(Borders::ALL));
             frame.render_widget(content, layout[1]);
         })?;
 
@@ -162,7 +160,7 @@ pub fn draw(terminal: &mut ratatui::Terminal<CrosstermBackend<Stdout>>) -> anyho
                         KeyCode::Enter => {
                             if !browser_ui.address.is_empty() {
                                 if let Err(e) = browser_ui.navigate(&browser_ui.address) {
-                                    eprintln!("Navigation error: {}", e);
+                                    error!("Navigation failed: {} - {}", browser_ui.address, e);
                                 }
                             }
                         }

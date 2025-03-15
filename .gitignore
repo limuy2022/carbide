@@ -4,6 +4,8 @@ node_modules/
 /.ccache
 /.git_cache
 /.vscode
+/.idea
+
 /target
 /chromium/*
 !/chromium/.gclient

@@ -1,10 +1,13 @@
 #[derive(Clone, Debug, clap::Parser)]
-#[command(long_about = r"
+#[command(
+    long_about = r"
    O    O      Carbide is a Chromium based browser for the terminal.
     \  /       
 O —— Cr —— O   In addition to the following options,
     /  \       Carbide also supports most Chromium options.
-   O    O      ")]
+   O    O      ",
+    ignore_errors = true
+)]
 pub struct CommandLine {
     #[arg(
         short,

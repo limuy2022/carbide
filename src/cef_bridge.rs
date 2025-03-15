@@ -1,16 +1,17 @@
+mod app;
+mod client;
+mod render;
+
+use crate::{cef_bridge::render::TerminalRenderHandler, utils};
 use anyhow::{Result, bail};
 use cef::{
-    App, Browser, BrowserHost, BrowserSettings, CefStringUtf16, Client, DictionaryValue, Frame,
-    ImplBrowser, ImplFrame, ImplRenderHandler, PaintElementType, ProcessMessage, Rect,
-    RenderProcessHandler, RequestContext, Value, WrapRenderHandler,
-    browser_host_create_browser_sync,
-    rc::{Rc, RcImpl},
+    App, Browser, BrowserSettings, CefStringUtf16, DictionaryValue, Frame, ImplBrowser, ImplFrame,
+    LogItems, RequestContext, browser_host_create_browser_sync, execute_process,
+    sandbox_info::SandboxInfo,
 };
-use std::{
-    ffi::c_int,
-    ptr,
-    sync::{Arc, Mutex},
-};
+use client::TerminalClient;
+use std::sync::{Arc, Mutex};
+use tracing::{info, trace};
 
 // Structure to hold browser state
 #[derive(Debug, Clone)]
@@ -39,15 +40,59 @@ impl Default for BrowserState {
 pub struct CarbideClient {
     state: Arc<Mutex<BrowserState>>,
     render_handler: Arc<TerminalRenderHandler>,
+    window_info: cef::WindowInfo,
+    client: cef::Client,
+    browser_host: cef::Browser,
 }
 
 impl CarbideClient {
-    pub fn new() -> Self {
+    /// Initializes a new instance of `CarbideClient`.
+    ///
+    /// This function sets up the necessary components for the CEF-based browser client,
+    /// including the sandbox, application, and browser settings. It initializes the CEF
+    /// library, creates the browser state, render handler, and client. If initialization
+    /// fails, it returns an error.
+    ///
+    /// # Returns
+    /// An `anyhow::Result` containing the `CarbideClient` instance if successful, or an error
+    /// if initialization fails.
+    ///
+    /// # Safety
+    /// must be called from the main thread
+    pub fn new() -> anyhow::Result<Self> {
+        info!("Creating CarbideClient");
+
         let state = Arc::new(Mutex::new(BrowserState::default()));
-        Self {
-            state: state.clone(),
-            render_handler: Arc::new(TerminalRenderHandler::new(state)),
-        }
+        let window_info = cef::WindowInfo {
+            windowless_rendering_enabled: true.into(),
+            ..Default::default()
+        };
+        let render_handler = Arc::new(TerminalRenderHandler::new(state.clone()));
+        trace!("created render handler");
+
+        let mut client = cef::Client::new(TerminalClient::new(render_handler.clone()));
+        trace!("created client");
+
+        let browser_settings = BrowserSettings {
+            windowless_frame_rate: 60,
+            ..Default::default()
+        };
+        let browser = browser_host_create_browser_sync(
+            Some(&window_info),
+            Some(&mut client),
+            Some(&CefStringUtf16::from("about:blank")),
+            Some(&browser_settings),
+            Option::<&mut DictionaryValue>::None,
+            Option::<&mut RequestContext>::None,
+        );
+        trace!("created browser");
+        Ok(Self {
+            state,
+            render_handler,
+            window_info,
+            client,
+            browser_host: browser.unwrap(),
+        })
     }
 
     pub fn get_frame_data(&self) -> Option<(Vec<u8>, (i32, i32))> {
@@ -66,22 +111,7 @@ impl CarbideClient {
     }
 
     pub fn get_browser(&self) -> Option<Browser> {
-        let window_info = cef::WindowInfo {
-            windowless_rendering_enabled: true.into(),
-            ..Default::default()
-        };
-
-        // let client = cef::Client::new(self.render_handler.clone() as Arc<dyn cef::RenderHandler>);
-        let mut client = cef::Client::default();
-
-        browser_host_create_browser_sync(
-            Some(&window_info),
-            Some(&mut client),
-            Some(&CefStringUtf16::from("about:blank")),
-            Some(&BrowserSettings::default()),
-            Option::<&mut DictionaryValue>::None,
-            Option::<&mut RequestContext>::None,
-        )
+        Some(self.browser_host.clone())
     }
 }
 
@@ -108,102 +138,50 @@ impl CarbideClient {
     }
 }
 
-#[derive(Debug)]
-struct TerminalRenderHandler {
-    state: Arc<Mutex<BrowserState>>,
-    object: *mut RcImpl<cef_dll_sys::_cef_render_handler_t, Self>,
-}
-
-impl TerminalRenderHandler {
-    fn new(state: Arc<Mutex<BrowserState>>) -> Self {
-        Self {
-            state,
-            object: ptr::null_mut(),
-        }
-    }
-}
-
-impl Clone for TerminalRenderHandler {
-    fn clone(&self) -> Self {
-        let object = unsafe {
-            let rc_impl = &mut *self.object;
-            rc_impl.interface.add_ref();
-            self.object
-        };
-        let state = self.state.clone();
-        Self { state, object }
-    }
-}
-
-impl cef::rc::Rc for TerminalRenderHandler {
-    fn as_base(&self) -> &cef_dll_sys::cef_base_ref_counted_t {
-        unsafe {
-            let rc_impl = &*self.object;
-            &rc_impl.cef_object.base
-        }
-    }
-}
-
-impl WrapRenderHandler for TerminalRenderHandler {
-    fn wrap_rc(&mut self, object: *mut RcImpl<cef_dll_sys::_cef_render_handler_t, Self>) {
-        self.object = object;
-    }
-}
-
-impl ImplRenderHandler for TerminalRenderHandler {
-    fn get_raw(&self) -> *mut cef_dll_sys::_cef_render_handler_t {
-        self.object as *mut _
-    }
-
-    fn get_view_rect(&self, browser: Option<&mut impl ImplBrowser>, rect: Option<&mut Rect>) {
-        let state = self.state.lock().unwrap();
-        if let Some(rect) = rect {
-            *rect = Rect {
-                x: 0,
-                y: 0,
-                width: state.frame_dimensions.0,
-                height: state.frame_dimensions.1,
-            };
-        }
-    }
-
-    fn on_paint(
-        &self,
-        browser: Option<&mut impl ImplBrowser>,
-        type_: PaintElementType,
-        dirty_rects_count: usize,
-        dirty_rects: Option<&Rect>,
-        buffer: *const u8,
-        width: c_int,
-        height: c_int,
-    ) {
-        if *type_.as_ref() == cef_dll_sys::cef_paint_element_type_t::PET_VIEW {
-            let mut state: std::sync::MutexGuard<'_, BrowserState> = self.state.lock().unwrap();
-            state.frame_dimensions = (width, height);
-            let buffer_slice =
-                unsafe { std::slice::from_raw_parts(buffer, (width * height * 4) as usize) };
-            let mut frame_buf = state.frame_buffer.lock().unwrap();
-            frame_buf.resize(buffer_slice.len(), 0);
-            frame_buf.copy_from_slice(buffer_slice);
-        }
-    }
-}
-
-// Initialize CEF
-pub fn initialize_cef() -> anyhow::Result<()> {
-    let opts = cef::Settings {
-        windowless_rendering_enabled: true.into(),
-        ..Default::default()
-    };
-    let code = cef::initialize(None, Some(&opts), Option::<&mut App>::None, ptr::null_mut());
-    if code != 0 {
-        bail!("cef init failed, code {}", code)
-    }
-    Ok(())
-}
-
 // Shutdown CEF
 pub fn shutdown_cef() -> Result<()> {
     cef::shutdown();
+    Ok(())
+}
+
+pub fn init_cef() -> Result<()> {
+    info!("Initializing CEF");
+    let args = cef::args::Args::new();
+    let cmd = args.as_cmd_line().unwrap();
+
+    let sandbox = SandboxInfo::new();
+    let opts = cef::Settings {
+        windowless_rendering_enabled: true.into(),
+        // TODO: sandbox
+        no_sandbox: true.into(),
+        log_file: CefStringUtf16::from(
+            std::path::PathBuf::from(utils::log::LOG_OUTPUT_DIR)
+                .join("cef.log")
+                .to_str()
+                .unwrap(),
+        ),
+        ..Default::default()
+    };
+
+    let mut app = app::TerminalApp::new();
+    info!("created app");
+    // let code = execute_process(None, Some(&mut app), sandbox.as_mut_ptr());
+    // if code != 0 {
+    //     tracing::error!("CEF process execution failed with code: {}", code);
+    //     bail!("cef process execution failed, code {}", code)
+    // }
+
+    // let code = cef::initialize(None, Some(&opts), Some(&mut app), sandbox.as_mut_ptr());
+    let code = cef::initialize(
+        Some(args.as_main_args()),
+        Some(&opts),
+        Option::<&mut App>::None,
+        sandbox.as_mut_ptr(),
+    );
+    if code == 0 {
+        tracing::error!("CEF initialization failed with code: {}", code);
+        bail!("cef init failed, code {}", code)
+    }
+    info!("initialized cef app instance");
     Ok(())
 }
