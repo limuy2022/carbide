@@ -1,8 +1,6 @@
-use crate::cef_bridge::TerminalRenderHandler;
 use cef::rc::{Rc, RcImpl};
 use cef::{Client, ImplClient, RenderHandler};
 use std::ptr;
-use std::sync::Arc;
 
 pub struct TerminalClient {
     object: *mut RcImpl<cef_dll_sys::cef_client_t, Self>,

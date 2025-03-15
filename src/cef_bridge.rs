@@ -5,12 +5,14 @@ mod render;
 use crate::{cef_bridge::render::TerminalRenderHandler, utils};
 use anyhow::{Result, bail};
 use cef::{
-    App, Browser, BrowserSettings, CefStringUtf16, DictionaryValue, Frame, ImplBrowser, ImplFrame,
-    LogItems, RequestContext, browser_host_create_browser_sync, execute_process,
-    sandbox_info::SandboxInfo,
+    Browser, BrowserSettings, CefStringUtf16, DictionaryValue, Frame, ImplBrowser, ImplFrame,
+    RequestContext, browser_host_create_browser_sync, sandbox_info::SandboxInfo,
 };
 use client::TerminalClient;
-use std::sync::{Arc, Mutex};
+use std::{
+    env::home_dir,
+    sync::{Arc, Mutex},
+};
 use tracing::{info, trace};
 
 // Structure to hold browser state
@@ -165,6 +167,12 @@ pub fn init_cef() -> Result<()> {
                 .to_str()
                 .unwrap(),
         ),
+        root_cache_path: home_dir()
+            .unwrap()
+            .join("carbide/cache")
+            .to_str()
+            .unwrap()
+            .into(),
         ..Default::default()
     };
 
@@ -176,7 +184,6 @@ pub fn init_cef() -> Result<()> {
     //     bail!("cef process execution failed, code {}", code)
     // }
 
-    // let code = cef::initialize(None, Some(&opts), Some(&mut app), sandbox.as_mut_ptr());
     let code = cef::initialize(
         Some(args.as_main_args()),
         Some(&opts),
