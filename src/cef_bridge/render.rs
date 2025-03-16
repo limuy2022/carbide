@@ -38,7 +38,7 @@ impl cef::rc::Rc for TerminalRenderHandler {
     fn as_base(&self) -> &cef_dll_sys::cef_base_ref_counted_t {
         unsafe {
             let rc_impl = &*self.object;
-            &rc_impl.cef_object.base
+            std::mem::transmute(&rc_impl.cef_object)
         }
     }
 }

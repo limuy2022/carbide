@@ -13,3 +13,5 @@ node_modules/
 !/chromium/patches
 /packages/*/build
 log/
+
+vgcore.*
