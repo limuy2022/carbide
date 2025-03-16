@@ -32,7 +32,7 @@ impl Default for BrowserState {
             title: String::new(),
             loading: false,
             frame_buffer: Arc::new(Mutex::new(Vec::new())),
-            frame_dimensions: (0, 0),
+            frame_dimensions: (1280, 720), // 设置默认尺寸避免初始化时为0
         }
     }
 }
@@ -65,7 +65,7 @@ impl CarbideClient {
         info!("Creating CarbideClient");
 
         let state = Arc::new(Mutex::new(BrowserState::default()));
-        let window_info = cef::WindowInfo {
+        let mut window_info = cef::WindowInfo {
             windowless_rendering_enabled: true.into(),
             ..Default::default()
         };
@@ -93,6 +93,7 @@ impl CarbideClient {
             }
         };
         trace!("created browser");
+        
         Ok(Self {
             state,
             // render_handler,
